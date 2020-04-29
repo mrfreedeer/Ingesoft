@@ -1,0 +1,38 @@
+<annotation>
+	<folder>Good</folder>
+	<filename>30.jpg</filename>
+	<path>C:\Users\Dell\Desktop\Test images\Good\30.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>659</width>
+		<height>398</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>fit_avocado</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>87</xmin>
+			<ymin>135</ymin>
+			<xmax>357</xmax>
+			<ymax>332</ymax>
+		</bndbox>
+	</object>
+	<object>
+		<name>fit_avocado</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>94</xmin>
+			<ymin>16</ymin>
+			<xmax>361</xmax>
+			<ymax>192</ymax>
+		</bndbox>
+	</object>
+</annotation>

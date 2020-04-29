@@ -1,0 +1,38 @@
+<annotation>
+	<folder>Good</folder>
+	<filename>42.jpg</filename>
+	<path>C:\Users\Dell\Desktop\Test images\Good\42.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>225</width>
+		<height>225</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>unfit_avocado</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>66</xmin>
+			<ymin>112</ymin>
+			<xmax>152</xmax>
+			<ymax>212</ymax>
+		</bndbox>
+	</object>
+	<object>
+		<name>unfit_avocado</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>112</xmin>
+			<ymin>23</ymin>
+			<xmax>191</xmax>
+			<ymax>125</ymax>
+		</bndbox>
+	</object>
+</annotation>
