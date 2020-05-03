@@ -4,8 +4,12 @@ from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap
 from detecto import core, utils, visualize
+from PIL import Image
+import glob
+import matplotlib.pyplot as plt
+import numpy as np
 
-
+plt.rcParams["figure.figsize"] = [1,10]
 class main_window(QtWidgets.QMainWindow):
 
     def __init__(self):
@@ -19,28 +23,60 @@ class main_window(QtWidgets.QMainWindow):
         self.top = 10
         self.width = 640
         self.height = 480
-        
+        self.loadedimages = None
+        self.model = core.Model.load('avocado_weights.pth', ['fit_avocado', 'unfit_avocado'])
         #Usar botón Cargar imagen
         self.button_load = self.findChild(QtWidgets.QPushButton, 'load_button')
         self.button_load.clicked.connect(self.openFileNamesDialog)
+        self.button_load_many = self.findChild(QtWidgets.QPushButton, 'load_many_button')
+        self.button_load_many.clicked.connect(self.loadFolder)
         #self.initUI()
 
         #Usar botón de ejecutar
         self.button_exec = self.findChild(QtWidgets.QPushButton, 'exec_button')
-        self.button_exec.clicked.connect(self.model)
+        self.button_exec.clicked.connect(self.predict)
         
 
         #Abrir archivo y mostrar imagen
     def openFileNamesDialog(self):
+
         #Abrir archivo
-        image = QFileDialog.getOpenFileName(None,'OpenFile','',"Image file(*.jpg)")
-        self.imagePath = image[0]
-        self.image = image
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        files, _ = QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
+        if files:
+            print(files)
+        self.imagePath = files[0]
+        print (self.imagePath)
         pixmap = QPixmap(self.imagePath)
         #Escalar archivo
         pixmap2 = pixmap.scaled(190, 140)
         #Imprimir imagen en pantalla
         self.show_image.setPixmap(pixmap2)
+    def loadFolder(self):
+        #Abrir archivo
+        #options = QFileDialog.Options()
+        #options |= QFileDialog.DontUseNativeDialog
+        #files, _ = QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
+        #if files:
+        #    print(files)
+        #imagePath = files[0]
+        
+
+        image_list = []
+        for filename in glob.glob('images/*.jpg'): #asumiendo jpg
+            im=Image.open(filename)
+            image_list.append(im)
+        self.loadedimages = image_list
+        QMessageBox.information(self, "Cargando Carpeta",
+                                        "Se han cargado todas las imagenes")
+        # for element in image_list:
+        #     print (element)
+        #pixmap = QPixmap(imagePath)
+        #Escalar archivo
+        #pixmap2 = pixmap.scaled(190, 140)
+        #Imprimir imagen en pantalla
+        #self.show_image.setPixmap(pixmap2)
 
         
 
@@ -53,11 +89,19 @@ class main_window(QtWidgets.QMainWindow):
       else: 
         event.ignore()
 
-    def model (self, image):
-        model = core.Model.load('avocado_weights.pth', ['fit_avocado', 'unfit_avocado'])
+
+    def predict(self):
+        if self.loadedimages:
+            self.predict_many()
+        else:
+            self.predict_one()
+    def predict_one (self):
+      
+      
         # Specify the path to your image
+        print (self.imagePath)
         image = utils.read_image(self.imagePath)
-        predictions = model.predict(image)
+        predictions = self.model.predict(image)
         
         # predictions format: (labels, boxes, scores)
         labels, boxes, scores = predictions
@@ -75,7 +119,33 @@ class main_window(QtWidgets.QMainWindow):
         print(scores)
         visualize.show_labeled_image(image, boxes, labels)
     
-    
+    def predict_many(self):
+        fit_avocados = 0
+        unfit_avocados = 0
+        QMessageBox.information(self, "Listo para empezar",
+                                        "Calculando productividad")
+        for image in self.loadedimages:
+            labels, boxes, scores = self.model.predict(image)
+            fit_avocados += labels.count('fit_avocado')
+            unfit_avocados += labels.count('unfit_avocado')
+        total = fit_avocados+unfit_avocados
+        print("Total: ", total)
+        print("Productivity: ", fit_avocados/total)
+        
+        
+        # Pie chart, where the slices will be ordered and plotted counter-clockwise:
+        labels = 'Aguacates maduros y listos', 'Otros Aguacates'
+        sizes = [fit_avocados/total, unfit_avocados/total]
+        explode = (0.1, 0)  
+
+        fig1, ax1 = plt.subplots()
+        ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
+                shadow=True, startangle=90)
+        fig1.canvas.set_window_title('Productividad de la cosecha')
+        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        manager = plt.get_current_fig_manager()
+        manager.window.showMaximized()
+        plt.show()
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
@@ -84,3 +154,6 @@ if __name__ == '__main__':
 
     main.setWindowTitle('Bienvenido')
     app.exec_()
+    
+        
+        
