@@ -10,8 +10,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 plt.rcParams["figure.figsize"] = [1,10]
-class main_window(QtWidgets.QMainWindow):
 
+
+class Singleton(object):
+    instances = {}
+    def __new__(cls, clz = None):
+        if clz is None:
+            # print ("Creating object for", cls)
+            if not cls.__name__ in Singleton.instances:
+                Singleton.instances[cls.__name__] = \
+                    object.__new__(cls)
+            return Singleton.instances[cls.__name__]
+        # print (cls.__name__, "creating", clz.__name__)
+        Singleton.instances[clz.__name__] = clz()
+        Singleton.first = clz
+        return type(clz.__name__, (Singleton,), dict(clz.__dict__))
+
+
+
+class main_window(QtWidgets.QMainWindow):
+    __metaclass__= Singleton()
     def __init__(self):
         #Iniciar objeto
         super(main_window, self).__init__()
