@@ -26,9 +26,30 @@ class Singleton(object):
         Singleton.first = clz
         return type(clz.__name__, (Singleton,), dict(clz.__dict__))
 
+class Prototype(object):
+    def __init__(self):
+        self.model = core.Model.load('avocado_weights.pth', ['fit_avocado', 'unfit_avocado'])
+    def train(self):
+        dataset = core.Dataset('images/')
+        model = core.Model(['fit_avocado', 'unfit_avocado'])
+        model.fit(dataset)
+        self.model = model 
 
+class Private_data(object):
+    def __init__(self, name = "", lastname =""):
+        self.name = name
+        self.lastname = lastname
+    def savePrediction(self, data):
+        self.fit_avocados = data[0]
+        self.unfit_avocados = data[1]
+        self.productivity = self.fit_avocados/(self.fit_avocados + self.unfit_avocados)
+        self.unproductivity = self.unfit_avocados/(self.fit_avocados + self.unfit_avocados)
+    def getProductivity(self):
+        return self.productivity
+    def getUnProductivity(self):
+        return self.unproductivity
 
-class main_window(QtWidgets.QMainWindow):
+class main_window(QtWidgets.QMainWindow, Prototype):
     __metaclass__= Singleton()
     def __init__(self):
         #Iniciar objeto
@@ -36,13 +57,13 @@ class main_window(QtWidgets.QMainWindow):
         #Cargar GUI
         uic.loadUi("main.ui", self)
         #Cargar la configuracion del archivo .ui en el objeto
+        self.private = Private_data("Juan", "Ospina")
         self.title = 'Aguacate'
         self.left = 10
         self.top = 10
         self.width = 640
         self.height = 480
         self.loadedimages = None
-        self.model = core.Model.load('avocado_weights.pth', ['fit_avocado', 'unfit_avocado'])
         #Usar botón Cargar imagen
         self.button_load = self.findChild(QtWidgets.QPushButton, 'load_button')
         self.button_load.clicked.connect(self.openFileNamesDialog)
@@ -72,14 +93,6 @@ class main_window(QtWidgets.QMainWindow):
         #Imprimir imagen en pantalla
         self.show_image.setPixmap(pixmap2)
     def loadFolder(self):
-        #Abrir archivo
-        #options = QFileDialog.Options()
-        #options |= QFileDialog.DontUseNativeDialog
-        #files, _ = QFileDialog.getOpenFileNames(self,"QFileDialog.getOpenFileNames()", "","All Files (*);;Python Files (*.py)", options=options)
-        #if files:
-        #    print(files)
-        #imagePath = files[0]
-        
 
         image_list = []
         for filename in glob.glob('images/*.jpg'): #asumiendo jpg
@@ -88,17 +101,8 @@ class main_window(QtWidgets.QMainWindow):
         self.loadedimages = image_list
         QMessageBox.information(self, "Cargando Carpeta",
                                         "Se han cargado todas las imagenes")
-        # for element in image_list:
-        #     print (element)
-        #pixmap = QPixmap(imagePath)
-        #Escalar archivo
-        #pixmap2 = pixmap.scaled(190, 140)
-        #Imprimir imagen en pantalla
-        #self.show_image.setPixmap(pixmap2)
 
-        
 
-            
     def closeEvent(self,event):
       reply =QMessageBox.question(self, "Mensaje", "Seguro quiere salir", QMessageBox.Yes, QMessageBox.No)
    
@@ -114,8 +118,7 @@ class main_window(QtWidgets.QMainWindow):
         else:
             self.predict_one()
     def predict_one (self):
-      
-      
+   
         # Specify the path to your image
         print (self.imagePath)
         image = utils.read_image(self.imagePath)
@@ -146,14 +149,15 @@ class main_window(QtWidgets.QMainWindow):
             labels, boxes, scores = self.model.predict(image)
             fit_avocados += labels.count('fit_avocado')
             unfit_avocados += labels.count('unfit_avocado')
+        self.private.savePrediction([fit_avocados, unfit_avocados])
         total = fit_avocados+unfit_avocados
         print("Total: ", total)
-        print("Productivity: ", fit_avocados/total)
+        print("Productivity: ", self.private.getProductivity())
         
         
         # Pie chart, where the slices will be ordered and plotted counter-clockwise:
         labels = 'Aguacates maduros y listos', 'Otros Aguacates'
-        sizes = [fit_avocados/total, unfit_avocados/total]
+        sizes = [self.private.getProductivity(), self.private.getUnProductivity()]
         explode = (0.1, 0)  
 
         fig1, ax1 = plt.subplots()
